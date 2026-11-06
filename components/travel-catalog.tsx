@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { products, Product, money, detailUrl, categories } from "@/lib/travel";
 import { TravelSearch } from "./travel-search";
+import { partyDetails } from "@/lib/travel-party";
 import { useCurrency } from "./travel-shell";
 import {
   Dialog,
@@ -22,7 +23,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-export function TravelCatalog({
+import { HotelResults } from "./hotel-results";
+import { HotelDetail } from "./hotel-detail";
+export function TravelCatalog(props: { type?: string; destination?: string }) {
+  return !props.type || props.type === "hotels" ? (
+    <HotelResults destination={props.destination} />
+  ) : (
+    <GenericCatalog {...props} />
+  );
+}
+function GenericCatalog({
   type = "hotels",
   destination,
 }: {
@@ -238,7 +248,14 @@ export function TravelCatalog({
 function Shield() {
   return <Sun size={24} />;
 }
-export function TravelDetail({ product: p }: { product: Product }) {
+export function TravelDetail({ product }: { product: Product }) {
+  return product.type === "hotels" ? (
+    <HotelDetail product={product} />
+  ) : (
+    <GenericDetail product={product} />
+  );
+}
+function GenericDetail({ product: p }: { product: Product }) {
   const params = useSearchParams();
   const currency = useCurrency();
   const [gallery, setGallery] = useState(false),
@@ -254,7 +271,8 @@ export function TravelDetail({ product: p }: { product: Product }) {
       (new Date(end).getTime() - new Date(start).getTime()) / 86400000,
     ) || 4,
   );
-  const guests = Math.min(8, Math.max(1, Number(params.get("guests")) || 2));
+  const party = partyDetails(params);
+  const guests = party.total;
   const rooms = Math.min(
     8,
     Math.max(Math.ceil(guests / 2), Number(params.get("rooms")) || 1),
@@ -271,7 +289,8 @@ export function TravelDetail({ product: p }: { product: Product }) {
     product: p.id,
     start,
     end,
-    guests: String(guests),
+    guests: String(party.adults),
+    children: party.children.join(","),
     rooms: String(rooms),
     option: String(selected),
   });
@@ -417,7 +436,7 @@ export function TravelDetail({ product: p }: { product: Product }) {
             {start} → {end}
           </p>
           <p>
-            {guests} adults{" "}
+            {party.label}{" "}
             {hotel
               ? `· ${rooms} room${rooms > 1 ? "s" : ""} · ${days} nights`
               : ""}

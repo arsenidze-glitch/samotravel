@@ -1,34 +1,17 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  BedDouble,
-  Plane,
-  Package,
-  Car,
-  Palmtree,
-  MapPin,
-  Search,
-  Users,
-  ArrowLeftRight,
-  Bus,
-} from "lucide-react";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Field, FieldLabel } from "@/components/ui/field";
+import { MapPin, Search, Users, ArrowLeftRight, Plane } from "lucide-react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
-const tabs = [
-  ["hotels", "Stays", BedDouble],
-  ["flights", "Flights", Plane],
-  ["packages", "Flight + Hotel", Package],
-  ["cars", "Cars", Car],
-  ["transfers", "Transfers", Bus],
-  ["activities", "Things to do", Palmtree],
-] as const;
+import { DestinationInput } from "./destination-input";
+import { TravelCalendar } from "./travel-calendar";
+import { parseChildren } from "@/lib/travel-party";
 export function TravelSearch({
   initial = "hotels",
   compact = false,
@@ -38,29 +21,27 @@ export function TravelSearch({
   compact?: boolean;
   values?: Record<string, string>;
 }) {
-  const router = useRouter();
-  const [type, setType] = useState(initial),
-    [destination, setDestination] = useState(values.destination || "Barcelona"),
+  const router = useRouter(),
+    type = initial;
+  const [destination, setDestination] = useState(
+      values.destination || "Barcelona",
+    ),
     [origin, setOrigin] = useState(values.origin || "London"),
     [start, setStart] = useState(values.start || "2027-07-10"),
     [end, setEnd] = useState(values.end || "2027-07-14"),
-    [guests, setGuests] = useState(Number(values.guests) || 2),
-    [rooms, setRooms] = useState(Number(values.rooms) || 1),
+    [guests, setGuests] = useState(
+      Math.min(8, Math.max(1, Number(values.guests) || 2)),
+    ),
+    [children, setChildren] = useState<(number | "")[]>(
+      parseChildren(values.children),
+    ),
     [open, setOpen] = useState(false),
-    [trip, setTrip] = useState(values.trip || "Round trip");
+    [trip, setTrip] = useState(values.trip || "Round trip"),
+    [cabin, setCabin] = useState(values.cabin || "Economy");
   const flight = type === "flights" || type === "packages";
+  const incomplete = children.some((a) => a === "");
   return (
     <div className={compact ? "search-widget compact" : "search-widget"}>
-      <Tabs value={type} onValueChange={(v) => setType(String(v))}>
-        <TabsList variant="line" className="product-tabs">
-          {tabs.map(([id, title, Icon]) => (
-            <TabsTrigger key={id} value={id}>
-              <Icon />
-              {title}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-      </Tabs>
       {type === "flights" && (
         <div className="flight-options">
           <label>
@@ -72,7 +53,7 @@ export function TravelSearch({
           </label>
           <label>
             Cabin{" "}
-            <select>
+            <select value={cabin} onChange={(e) => setCabin(e.target.value)}>
               <option>Economy</option>
               <option>Business</option>
             </select>
@@ -83,14 +64,19 @@ export function TravelSearch({
         className="search-form"
         onSubmit={(e) => {
           e.preventDefault();
+          if (incomplete) {
+            setOpen(true);
+            return;
+          }
           const p = new URLSearchParams({
             destination,
             start,
             end,
             guests: String(guests),
-            rooms: String(rooms),
+            children: children.join(","),
             origin,
             trip,
+            cabin,
           });
           router.push(
             `/${type}/${type === "hotels" || type === "activities" ? encodeURIComponent(destination.toLowerCase()) : "search"}?${p}`,
@@ -100,15 +86,11 @@ export function TravelSearch({
         {flight && (
           <div className="search-location">
             <Plane />
-            <Field>
-              <FieldLabel htmlFor="origin">Flying from</FieldLabel>
-              <input
-                id="origin"
-                value={origin}
-                onChange={(e) => setOrigin(e.target.value)}
-                required
-              />
-            </Field>
+            <DestinationInput
+              value={origin}
+              onChange={setOrigin}
+              label="Flying from"
+            />
             <button
               type="button"
               aria-label="Swap origin and destination"
@@ -123,81 +105,30 @@ export function TravelSearch({
         )}
         <div className="search-location">
           <MapPin />
-          <Field>
-            <FieldLabel htmlFor="destination">
-              {type === "cars" || type === "transfers"
+          <DestinationInput
+            value={destination}
+            onChange={setDestination}
+            label={
+              type === "cars" || type === "transfers"
                 ? "Pick-up location"
                 : flight
                   ? "Flying to"
-                  : "Where to?"}
-            </FieldLabel>
-            <input
-              id="destination"
-              list="cities"
-              value={destination}
-              onChange={(e) => setDestination(e.target.value)}
-              required
-            />
-            <datalist id="cities">
-              {[
-                "Barcelona",
-                "Lisbon",
-                "Santorini",
-                "Bali",
-                "Kyoto",
-                "Paris",
-                "London",
-                "Dubai",
-              ].map((x) => (
-                <option key={x}>{x}</option>
-              ))}
-            </datalist>
-          </Field>
+                  : "Where to?"
+            }
+          />
         </div>
-        <div className="search-date">
-          <Field>
-            <FieldLabel htmlFor="checkin">
-              {type === "hotels" ? "Check-in" : "Departure"}
-            </FieldLabel>
-            <input
-              id="checkin"
-              type="date"
-              min="2026-11-06"
-              value={start}
-              onChange={(e) => {
-                setStart(e.target.value);
-                if (e.target.value >= end)
-                  setEnd(
-                    new Date(new Date(e.target.value).getTime() + 86400000)
-                      .toISOString()
-                      .slice(0, 10),
-                  );
-              }}
-              required
-            />
-          </Field>
-        </div>
-        {type !== "activities" && trip !== "One way" && (
-          <div className="search-date">
-            <Field>
-              <FieldLabel htmlFor="checkout">
-                {type === "hotels" ? "Check-out" : "Return"}
-              </FieldLabel>
-              <input
-                id="checkout"
-                type="date"
-                min={new Date(
-                  new Date(start || "2027-07-10").getTime() + 86400000,
-                )
-                  .toISOString()
-                  .slice(0, 10)}
-                value={end}
-                onChange={(e) => setEnd(e.target.value)}
-                required
-              />
-            </Field>
-          </div>
-        )}
+        <TravelCalendar
+          start={start}
+          end={end}
+          hotel={type === "hotels"}
+          single={
+            type === "activities" || (type === "flights" && trip === "One way")
+          }
+          onChange={(a, b) => {
+            setStart(a);
+            setEnd(b);
+          }}
+        />
         <button
           type="button"
           className="guest-trigger"
@@ -205,19 +136,27 @@ export function TravelSearch({
         >
           <Users />
           <span>
-            <small>Travelers & rooms</small>
-            {guests} adults · {rooms} room{rooms > 1 ? "s" : ""}
+            <small>Travelers</small>
+            {guests} adult{guests > 1 ? "s" : ""}
+            {children.length
+              ? ` · ${children.length} child${children.length > 1 ? "ren" : ""}`
+              : ""}
           </span>
         </button>
         <button type="submit" className="search-submit">
-          <Search size={20} /> Search
+          <Search size={20} />
+          Search
         </button>
       </form>
       {!compact && (
         <div className="popular-search">
           <span>A little inspiration:</span>
           {["Lisbon", "Santorini", "Bali", "Kyoto"].map((city) => (
-            <button key={city} onClick={() => setDestination(city)}>
+            <button
+              type="button"
+              key={city}
+              onClick={() => setDestination(city)}
+            >
               {city}
               <ArrowLeftRight size={10} />
             </button>
@@ -225,40 +164,104 @@ export function TravelSearch({
         </div>
       )}
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
+        <DialogContent className="family-dialog">
           <DialogHeader>
             <DialogTitle>Who&apos;s coming along?</DialogTitle>
+            <DialogDescription>
+              A little adventure for everyone.
+            </DialogDescription>
           </DialogHeader>
-          {[
-            ["Adults", guests, setGuests, 1],
-            ["Rooms", rooms, setRooms, 1],
-          ].map(([name, value, setter, min]) => (
-            <div className="counter" key={String(name)}>
-              <span>{String(name)}</span>
-              <div>
-                <button
-                  disabled={Number(value) <= Number(min)}
-                  onClick={() =>
-                    (setter as typeof setGuests)(Number(value) - 1)
-                  }
-                  aria-label={`Remove ${name}`}
-                >
-                  −
-                </button>
-                <b>{String(value)}</b>
-                <button
-                  disabled={Number(value) >= 8}
-                  onClick={() =>
-                    (setter as typeof setGuests)(Number(value) + 1)
-                  }
-                  aria-label={`Add ${name}`}
-                >
-                  +
-                </button>
-              </div>
+          <div className="counter">
+            <span>
+              <b>Adults</b>
+              <small>Ages 18 and above</small>
+            </span>
+            <div>
+              <button
+                aria-label="Remove adult"
+                disabled={guests <= 1}
+                onClick={() => setGuests(guests - 1)}
+              >
+                −
+              </button>
+              <b>{guests}</b>
+              <button
+                aria-label="Add adult"
+                disabled={guests >= 8}
+                onClick={() => setGuests(guests + 1)}
+              >
+                +
+              </button>
             </div>
-          ))}
-          <button className="primary" onClick={() => setOpen(false)}>
+          </div>
+          <div className="counter">
+            <span>
+              <b>Children</b>
+              <small>Ages 0–17</small>
+            </span>
+            <div>
+              <button
+                aria-label="Remove child"
+                disabled={!children.length}
+                onClick={() => setChildren(children.slice(0, -1))}
+              >
+                −
+              </button>
+              <b>{children.length}</b>
+              <button
+                aria-label="Add child"
+                disabled={children.length >= 6}
+                onClick={() => setChildren([...children, ""])}
+              >
+                +
+              </button>
+            </div>
+          </div>
+          {children.length > 0 && (
+            <div className="child-ages">
+              <p>How old will each child be at check-in?</p>
+              <div>
+                {children.map((age, i) => (
+                  <label key={i}>
+                    Child {i + 1}
+                    <select
+                      aria-label={`Child ${i + 1} age`}
+                      required
+                      value={age}
+                      onChange={(e) =>
+                        setChildren(
+                          children.map((a, j) =>
+                            j === i ? Number(e.target.value) : a,
+                          ),
+                        )
+                      }
+                    >
+                      <option value="" disabled>
+                        Select age
+                      </option>
+                      {Array.from({ length: 18 }, (_, a) => (
+                        <option key={a} value={a}>
+                          {a === 0
+                            ? "Under 1"
+                            : `${a} year${a === 1 ? "" : "s"}`}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                ))}
+              </div>
+              {incomplete && (
+                <small role="status">
+                  Please select an age for every child.
+                </small>
+              )}
+            </div>
+          )}
+          <button
+            className="primary"
+            disabled={incomplete}
+            onClick={() => setOpen(false)}
+          >
             Done
           </button>
         </DialogContent>

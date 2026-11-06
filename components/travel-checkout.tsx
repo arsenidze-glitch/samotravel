@@ -4,6 +4,8 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Check, ArrowRight, ShieldCheck, Download } from "lucide-react";
 import { products, money } from "@/lib/travel";
+import { partyDetails } from "@/lib/travel-party";
+import { roomNames } from "@/lib/hotel-info";
 import { useCurrency } from "./travel-shell";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -17,11 +19,9 @@ export function TravelCheckout() {
     [email, setEmail] = useState(""),
     [extra, setExtra] = useState(false),
     [accepted, setAccepted] = useState(false);
-  const guests = Math.min(8, Math.max(1, Number(params.get("guests")) || 2)),
-    rooms = Math.min(
-      8,
-      Math.max(Math.ceil(guests / 2), Number(params.get("rooms")) || 1),
-    );
+  const party = partyDetails(params),
+    guests = party.total,
+    rooms = party.rooms;
   const start = params.get("start") || "2027-07-10",
     end = params.get("end") || "2027-07-14";
   const days = Math.max(
@@ -43,7 +43,7 @@ export function TravelCheckout() {
     total = base + (extra ? 35 : 0);
   const steps = ["Your details", "Little extras", "Demo payment", "Review"];
   function download() {
-    const text = `SAMO TRAVEL — DEMO ITINERARY\nNot a reservation. No payment taken.\n${p.name}\n${start} to ${end}\n${guests} travelers\nIllustrative total: ${money(total, currency)}`;
+    const text = `SAMO TRAVEL — DEMO ITINERARY\nNot a reservation. No payment taken.\n${p.name}\n${start} to ${end}\n${party.label}\nIllustrative total: ${money(total, currency)}`;
     const url = URL.createObjectURL(new Blob([text], { type: "text/plain" }));
     const a = document.createElement("a");
     a.href = url;
@@ -64,7 +64,7 @@ export function TravelCheckout() {
           <img src={p.image} alt={p.name} />
           <h2>{p.name}</h2>
           <p>
-            {start} — {end} · {guests} travelers
+            {start} — {end} · {party.label}
           </p>
           <p>
             Illustrative total: <b>{money(total, currency)}</b>
@@ -193,10 +193,13 @@ export function TravelCheckout() {
               </h3>
               <p>{email}</p>
               <p>
-                {guests} travelers · {start} to {end}
+                {party.label} · {start} to {end}
               </p>
               <p>
-                {p.name} · {["Essential", "Comfort", "Premium"][option]} option
+                {p.name} ·{" "}
+                {p.type === "hotels"
+                  ? roomNames[option]
+                  : ["Essential", "Comfort", "Premium"][option]}
               </p>
               <p>
                 {extra ? "Arrival transfer included" : "No extras selected"}
@@ -240,7 +243,7 @@ export function TravelCheckout() {
             {start} → {end}
           </p>
           <p>
-            {guests} travelers{" "}
+            {party.label}{" "}
             {p.type === "hotels" ? `· ${days} nights · ${rooms} rooms` : ""}
           </p>
           <div className="price-row">
