@@ -1,5 +1,242 @@
-'use client'
-import Link from 'next/link';import {useState} from 'react';import {ArrowRight,ArrowUpRight,Search,Compass,Headphones,ShieldCheck,Palmtree} from 'lucide-react';import {destinations} from '@/lib/travel';
-export function DestinationPage({slug}:{slug?:string}){const name=slug?slug.replaceAll('-',' '):'';const d=destinations.find(d=>d.name.toLowerCase()===name);if(slug)return <main><div className="destination-hero"><img src={d?.image||'/images/coast.png'} alt={d?.name||'Amalfi Coast'}/><div className="container"><span className="eyebrow">THE SAMO FIELD NOTES</span><h1>{d?.name|| (name==='slow travel'?'The art of doing a little less.':name)}.</h1><p>Get a little lost. Find something good.</p></div></div><section className="container section editorial-layout"><div><span className="eyebrow">TAKE YOUR TIME. YOU’RE HERE.</span><h2>Some places are better without a plan.</h2><p>Start with a slow morning and a coffee at the corner café. Follow the streets that catch your eye. Find a favorite little spot and stay longer than you meant to.</p><h3>A good day, the local way</h3><p>Explore early, before the crowds arrive. Leave the afternoon for a long lunch and a walk with no particular destination. Ask your host where they would go for dinner — the best recommendations rarely come with a billboard.</p><h3>A little practical magic</h3><p>Spring and early autumn bring milder days and a gentler pace. Pack comfortable shoes, a reusable water bottle and room for an unexpected find. Check current entry requirements before you travel.</p><Link className="primary" href={`/hotels/${d?.name.toLowerCase()||'barcelona'}`}>Find a place to call home <ArrowUpRight size={17}/></Link></div><aside className="panel"><Palmtree size={36}/><h3>The slow-travel checklist</h3><p>One neighborhood at a time.</p><p>Local cafés over long queues.</p><p>Leave room for the unexpected.</p><p>Take memories, not a packed schedule.</p></aside></section></main>;return <main className="container section"><span className="eyebrow">LET CURIOSITY LEAD</span><h1 className="page-title">The world looks good on you.</h1><p className="muted">A few favorite places to start your next story.</p><div className="discovery-grid">{destinations.map(d=><Link key={d.name} href={`/destinations/${d.country.toLowerCase()}/${d.name.toLowerCase()}`}><img src={d.image} alt={d.name}/><h2>{d.name} <ArrowUpRight size={20}/></h2><p>{d.country} · {d.tag}</p></Link>)}</div></main>}
-const faqs=[['Can I make a real booking?','Not in this demo. You can explore sample travel products and create a demo itinerary. No supplier reservation, charge or email is made.'],['How do cancellations work?','Cancellation conditions are shown beside each sample room or fare. For this demo, no actual booking exists to cancel.'],['Are taxes included?','The illustrative totals include sample taxes and fees. Any extras you select are itemized in the demo checkout.'],['Can I change my travel dates?','Yes. Use the search widget to choose your dates, then continue to a listing. Dates are carried into the demo itinerary.'],['What happens to my personal details?','Demo form values stay in temporary page memory only. Do not enter sensitive information. Leaving or reloading checkout clears your form.']];
-export function InfoPage({path}:{path:string}){const [query,setQuery]=useState('');const account=/^(login|register|forgot-password|reset-password|account)/.test(path);const legal=['terms','privacy','cookies'].includes(path);if(account)return <main className="container section"><div className="account-intro panel"><Compass size={38}/><span className="eyebrow">YOUR LITTLE CORNER OF THE WORLD</span><h1>Your journeys, all together.</h1><p>Accounts and saved bookings are not connected in this demo. You can explore every destination and try the booking journey without signing in.</p><p className="muted">Real sign-in, password recovery and permanent saved trips require an authentication backend.</p><Link className="primary" href="/hotels">Explore without an account <ArrowRight size={17}/></Link></div></main>;if(legal||path==='about')return <main className="container section legal-page"><span className="eyebrow">A LITTLE TRANSPARENCY</span><h1 className="page-title">{path==='terms'?'Demo terms of use':path==='privacy'?'Your privacy matters.':path==='cookies'?'Cookies, clearly explained.':'Travel. Anywhere. Simply.'}</h1><p>Samotravel is presented here as an interactive design prototype, not an operating travel agency.</p><h2>{path==='privacy'?'Your information':path==='cookies'?'This prototype':'About this experience'}</h2><p>{path==='privacy'?'Checkout information is held only in temporary browser memory and is not submitted to a booking provider. Use fictional data while exploring.':path==='cookies'?'The demo does not implement advertising cookies or persistent browser storage. The hosting platform may use essential infrastructure cookies. External photography requests disclose your IP address to the image provider.':'All prices, ratings, inventory and travel conditions are illustrative. No reservation, payment, supplier contract or email confirmation is created.'}</p><h2>Before a public launch</h2><p>Live supplier connections, payment processing, authentication, verified policies and a customer support operation must be configured before this can be used as a commercial booking service.</p><Link className="text-link" href="/help">Visit the help center <ArrowRight size={16}/></Link></main>;return <main className="container section"><div className="help-hero"><Headphones size={35}/><span className="eyebrow">A LITTLE HELP GOES A LONG WAY</span><h1 className="page-title">{path==='manage-booking'?'Let’s find your way.':path==='contact'?'You’re in good company.':'Hey, how can we help?'}</h1><p>{path==='manage-booking'?'No live bookings are stored in this prototype. Download your itinerary at the end of demo checkout.':path==='contact'?'Live support is not connected yet. These answers can help you explore the demo.':'Good questions deserve simple answers.'}</p><label className="help-search"><Search size={19}/><span className="sr-only">Search help articles</span><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search for a little clarity…"/></label></div><div className="faq-list">{faqs.filter(f=>f.join(' ').toLowerCase().includes(query.toLowerCase())).map(([q,a])=><details key={q}><summary>{q}<span>+</span></summary><p>{a}</p></details>)}{!faqs.some(f=>f.join(' ').toLowerCase().includes(query.toLowerCase()))&&<p>No matching articles. Try “booking”, “dates” or “privacy”.</p>}</div></main>}
+"use client";
+import Link from "next/link";
+import { useState } from "react";
+import {
+  ArrowRight,
+  ArrowUpRight,
+  Search,
+  Compass,
+  Headphones,
+  ShieldCheck,
+  Palmtree,
+} from "lucide-react";
+import { destinations } from "@/lib/travel";
+export function DestinationPage({ slug }: { slug?: string }) {
+  const name = slug ? slug.replaceAll("-", " ") : "";
+  const d = destinations.find((d) => d.name.toLowerCase() === name);
+  if (slug)
+    return (
+      <main>
+        <div className="destination-hero">
+          <img
+            src={d?.image || "/images/coast.png"}
+            alt={d?.name || "Amalfi Coast"}
+          />
+          <div className="container">
+            <span className="eyebrow">THE SAMO FIELD NOTES</span>
+            <h1>
+              {d?.name ||
+                (name === "slow travel"
+                  ? "The art of doing a little less."
+                  : name)}
+              .
+            </h1>
+            <p>Get a little lost. Find something good.</p>
+          </div>
+        </div>
+        <section className="container section editorial-layout">
+          <div>
+            <span className="eyebrow">TAKE YOUR TIME. YOU’RE HERE.</span>
+            <h2>Some places are better without a plan.</h2>
+            <p>
+              Start with a slow morning and a coffee at the corner café. Follow
+              the streets that catch your eye. Find a favorite little spot and
+              stay longer than you meant to.
+            </p>
+            <h3>A good day, the local way</h3>
+            <p>
+              Explore early, before the crowds arrive. Leave the afternoon for a
+              long lunch and a walk with no particular destination. Ask your
+              host where they would go for dinner — the best recommendations
+              rarely come with a billboard.
+            </p>
+            <h3>A little practical magic</h3>
+            <p>
+              Spring and early autumn bring milder days and a gentler pace. Pack
+              comfortable shoes, a reusable water bottle and room for an
+              unexpected find. Check current entry requirements before you
+              travel.
+            </p>
+            <Link
+              className="primary"
+              href={`/hotels/${d?.name.toLowerCase() || "barcelona"}`}
+            >
+              Find a place to call home <ArrowUpRight size={17} />
+            </Link>
+          </div>
+          <aside className="panel">
+            <Palmtree size={36} />
+            <h3>The slow-travel checklist</h3>
+            <p>One neighborhood at a time.</p>
+            <p>Local cafés over long queues.</p>
+            <p>Leave room for the unexpected.</p>
+            <p>Take memories, not a packed schedule.</p>
+          </aside>
+        </section>
+      </main>
+    );
+  return (
+    <main className="container section">
+      <span className="eyebrow">LET CURIOSITY LEAD</span>
+      <h1 className="page-title">The world looks good on you.</h1>
+      <p className="muted">A few favorite places to start your next story.</p>
+      <div className="discovery-grid">
+        {destinations.map((d) => (
+          <Link
+            key={d.name}
+            href={`/destinations/${d.country.toLowerCase()}/${d.name.toLowerCase()}`}
+          >
+            <img src={d.image} alt={d.name} />
+            <h2>
+              {d.name} <ArrowUpRight size={20} />
+            </h2>
+            <p>
+              {d.country} · {d.tag}
+            </p>
+          </Link>
+        ))}
+      </div>
+    </main>
+  );
+}
+const faqs = [
+  [
+    "Can I make a real booking?",
+    "Not in this demo. You can explore sample travel products and create a demo itinerary. No supplier reservation, charge or email is made.",
+  ],
+  [
+    "How do cancellations work?",
+    "Cancellation conditions are shown beside each sample room or fare. For this demo, no actual booking exists to cancel.",
+  ],
+  [
+    "Are taxes included?",
+    "The illustrative totals include sample taxes and fees. Any extras you select are itemized in the demo checkout.",
+  ],
+  [
+    "Can I change my travel dates?",
+    "Yes. Use the search widget to choose your dates, then continue to a listing. Dates are carried into the demo itinerary.",
+  ],
+  [
+    "What happens to my personal details?",
+    "Demo form values stay in temporary page memory only. Do not enter sensitive information. Leaving or reloading checkout clears your form.",
+  ],
+];
+export function InfoPage({ path }: { path: string }) {
+  const [query, setQuery] = useState("");
+  const account =
+    /^(login|register|forgot-password|reset-password|account)/.test(path);
+  const legal = ["terms", "privacy", "cookies"].includes(path);
+  if (account)
+    return (
+      <main className="container section">
+        <div className="account-intro panel">
+          <Compass size={38} />
+          <span className="eyebrow">YOUR LITTLE CORNER OF THE WORLD</span>
+          <h1>Your journeys, all together.</h1>
+          <p>
+            Accounts and saved bookings are not connected in this demo. You can
+            explore every destination and try the booking journey without
+            signing in.
+          </p>
+          <p className="muted">
+            Real sign-in, password recovery and permanent saved trips require an
+            authentication backend.
+          </p>
+          <Link className="primary" href="/hotels">
+            Explore without an account <ArrowRight size={17} />
+          </Link>
+        </div>
+      </main>
+    );
+  if (legal || path === "about")
+    return (
+      <main className="container section legal-page">
+        <span className="eyebrow">A LITTLE TRANSPARENCY</span>
+        <h1 className="page-title">
+          {path === "terms"
+            ? "Demo terms of use"
+            : path === "privacy"
+              ? "Your privacy matters."
+              : path === "cookies"
+                ? "Cookies, clearly explained."
+                : "Travel. Anywhere. Simply."}
+        </h1>
+        <p>
+          Samotravel is presented here as an interactive design prototype, not
+          an operating travel agency.
+        </p>
+        <h2>
+          {path === "privacy"
+            ? "Your information"
+            : path === "cookies"
+              ? "This prototype"
+              : "About this experience"}
+        </h2>
+        <p>
+          {path === "privacy"
+            ? "Checkout information is held only in temporary browser memory and is not submitted to a booking provider. Use fictional data while exploring."
+            : path === "cookies"
+              ? "The demo does not implement advertising cookies or persistent browser storage. The hosting platform may use essential infrastructure cookies. External photography requests disclose your IP address to the image provider."
+              : "All prices, ratings, inventory and travel conditions are illustrative. No reservation, payment, supplier contract or email confirmation is created."}
+        </p>
+        <h2>Before a public launch</h2>
+        <p>
+          Live supplier connections, payment processing, authentication,
+          verified policies and a customer support operation must be configured
+          before this can be used as a commercial booking service.
+        </p>
+        <Link className="text-link" href="/help">
+          Visit the help center <ArrowRight size={16} />
+        </Link>
+      </main>
+    );
+  return (
+    <main className="container section">
+      <div className="help-hero">
+        <Headphones size={35} />
+        <span className="eyebrow">A LITTLE HELP GOES A LONG WAY</span>
+        <h1 className="page-title">
+          {path === "manage-booking"
+            ? "Let’s find your way."
+            : path === "contact"
+              ? "You’re in good company."
+              : "Hey, how can we help?"}
+        </h1>
+        <p>
+          {path === "manage-booking"
+            ? "No live bookings are stored in this prototype. Download your itinerary at the end of demo checkout."
+            : path === "contact"
+              ? "Live support is not connected yet. These answers can help you explore the demo."
+              : "Good questions deserve simple answers."}
+        </p>
+        <label className="help-search">
+          <Search size={19} />
+          <span className="sr-only">Search help articles</span>
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search for a little clarity…"
+          />
+        </label>
+      </div>
+      <div className="faq-list">
+        {faqs
+          .filter((f) =>
+            f.join(" ").toLowerCase().includes(query.toLowerCase()),
+          )
+          .map(([q, a]) => (
+            <details key={q}>
+              <summary>
+                {q}
+                <span>+</span>
+              </summary>
+              <p>{a}</p>
+            </details>
+          ))}
+        {!faqs.some((f) =>
+          f.join(" ").toLowerCase().includes(query.toLowerCase()),
+        ) && <p>No matching articles. Try “booking”, “dates” or “privacy”.</p>}
+      </div>
+    </main>
+  );
+}

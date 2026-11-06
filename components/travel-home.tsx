@@ -1,12 +1,329 @@
-'use client'
-import Link from 'next/link';import {ArrowRight,ArrowUpRight,Check,ShieldCheck,Headphones,Palmtree,MoveUpRight,Sun,Heart,Star} from 'lucide-react';import {useState} from 'react';import {TravelSearch} from './travel-search';import {destinations,products,money,detailUrl,Product} from '@/lib/travel';import {useCurrency} from './travel-shell';
-export function ProductCard({product:p}:{product:Product}){const [saved,setSaved]=useState(false);const currency=useCurrency();return <article className="product-card"><div className="product-image"><Link href={detailUrl(p)}><img src={p.image} alt={p.name} loading="lazy"/></Link><button className="favorite" aria-label={saved?`Unsave ${p.name}`:`Save ${p.name} for this visit`} aria-pressed={saved} onClick={()=>setSaved(!saved)}><Heart size={17} fill={saved?'currentColor':'none'}/></button><span className="image-label">{p.feature}</span></div><div className="product-info"><div className="card-top"><span>Barcelona, Spain</span><span className="rating">★ {p.rating}</span></div><Link href={detailUrl(p)}><h3>{p.name}</h3></Link><div className="card-bottom"><span>{p.type==='hotels'?'Boutique stay · 4 stars':p.type==='activities'?'A little adventure':'Your next escape'}</span><span>from <b>{money(p.price,currency)}</b><small> / {p.type==='hotels'?'night':p.type==='cars'?'day':'person'}</small></span></div></div></article>}
-export function TravelHome(){const currency=useCurrency();return <main><section className="hero"><div className="container"><div className="hero-intro"><div><div className="eyebrow"><span/> GOOD PLACES. GREAT FEELINGS.</div><h1>Go somewhere<br/><span>that feels like you.</span><Sun className="hero-sun" strokeWidth={1.4}/></h1><p>A city break. A barefoot week. A just-because escape.<br/>Your kind of trip starts here.</p></div><div className="hero-note"><span>Less scrolling.<br/>More strolling.</span><ArrowUpRight size={45} strokeWidth={1}/></div></div><TravelSearch/><div className="hero-photo"><img src="/images/coast.png" alt="Sunlit Positano houses above the turquoise Mediterranean Sea" fetchPriority="high"/><div className="photo-overlay"/><div className="photo-copy"><span className="photo-kicker">A LITTLE INSPIRATION, ON US</span><h2>Out of office.<br/>Into the blue.</h2><Link href="/destinations/italy/amalfi">Meet the Amalfi Coast <ArrowUpRight size={19}/></Link></div><div className="postcard"><Sun size={22}/><span>Salt in your hair.<br/>Not a care.</span><small>AMALFI COAST, ITALY</small></div><div className="photo-location"><MapPinIcon/> Positano, Italy <span>40.6281° N, 14.4845° E</span></div></div></div></section>
- <div className="trust-strip container"><span><ShieldCheck/>Good trips. No surprises.</span><span><Check/>Upfront prices, always</span><span><Heart/>Stays with a little soul</span><span><Headphones/>A helping hand, anytime</span></div>
- <section className="container section"><div className="section-heading"><div><span className="eyebrow">WHERE WILL YOUR CURIOSITY TAKE YOU?</span><h2>Some places just <em>call you.</em></h2></div><Link className="text-link" href="/destinations">Explore all destinations <ArrowUpRight size={17}/></Link></div><div className="destination-grid">{destinations.map((d,i)=><Link className="destination-card" href={`/hotels/${d.name.toLowerCase()}?destination=${d.name}`} key={d.name}><div className="destination-image"><img src={d.image} alt={`${d.name}, ${d.country}`} loading="lazy"/>{i===0&&<span className="little-badge">A crowd favorite</span>}<span className="round-arrow"><ArrowUpRight size={19}/></span></div><div className="destination-heading"><h3>{d.name}</h3><span>from <b>{money(d.price,currency)}</b></span></div><p>{d.country} <span>·</span> {d.tag}</p></Link>)}</div></section>
- <section className="container section"><div className="section-heading"><div><span className="eyebrow">CHECK IN. SWITCH OFF.</span><h2>Not just a room. <em>Your kind of place.</em></h2></div><Link className="text-link" href="/hotels">Find your stay <ArrowUpRight size={17}/></Link></div><div className="three-grid">{products.filter(p=>p.type==='hotels').map(p=><ProductCard key={p.id} product={p}/>)}</div></section>
- <section className="container bundle-banner"><div><span className="eyebrow">GOOD TOGETHER. BETTER BUNDLED.</span><h2>Flight + stay.<br/>A little less to pay.</h2><p>Pair your perfect stay with a flight.<br/>Keep a little more for the good stuff.</p><Link className="primary" href="/packages">Find my getaway <ArrowUpRight size={17}/></Link></div><div className="bundle-art"><div className="ticket"><span>SAMO AIR / YOUR NEXT ADVENTURE</span><div>LON <PlaneIcon/> BCN</div><small>BOARDING: WHENEVER YOU&apos;RE READY</small></div><img src={destinations[0].image} alt="Barcelona architecture" loading="lazy"/><div className="sun-sticker">More trip.<br/>Less spend.</div></div></section>
- <section className="container section"><div className="section-heading"><div><span className="eyebrow">THE STORIES YOU TAKE HOME</span><h2>Make room for <em>the memorable.</em></h2></div><Link className="text-link" href="/activities">Explore experiences <ArrowUpRight size={17}/></Link></div><div className="three-grid">{products.filter(p=>p.type==='activities').map(p=><ProductCard key={p.id} product={p}/>)}<Link className="editorial-card" href="/guides/slow-travel"><Palmtree size={44} strokeWidth={1.3}/><span>THE SAMO JOURNAL</span><h3>The art of<br/>doing a little less.</h3><p>Our guide to slower, happier travel.</p><ArrowUpRight/></Link></div></section>
- <section className="newsletter"><div className="container newsletter-inner"><div><span className="eyebrow">A LITTLE WANDERLUST IN YOUR INBOX</span><h2>Good trips start with a little inspiration.</h2><p>Explore our destination guides. No noise, just places worth going.</p></div><Link href="/destinations" className="primary">Get inspired <ArrowRight size={18}/></Link></div></section></main>}
-function MapPinIcon(){return <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2"/></svg>}
-function PlaneIcon(){return <MoveUpRight size={28}/>}
+"use client";
+import Link from "next/link";
+import {
+  ArrowRight,
+  ArrowUpRight,
+  Check,
+  ShieldCheck,
+  Headphones,
+  Palmtree,
+  MoveUpRight,
+  Sun,
+  Heart,
+  Star,
+} from "lucide-react";
+import { useState } from "react";
+import { TravelSearch } from "./travel-search";
+import {
+  destinations,
+  products,
+  money,
+  detailUrl,
+  Product,
+} from "@/lib/travel";
+import { useCurrency } from "./travel-shell";
+export function ProductCard({ product: p }: { product: Product }) {
+  const [saved, setSaved] = useState(false);
+  const currency = useCurrency();
+  return (
+    <article className="product-card">
+      <div className="product-image">
+        <Link href={detailUrl(p)}>
+          <img src={p.image} alt={p.name} loading="lazy" />
+        </Link>
+        <button
+          className="favorite"
+          aria-label={
+            saved ? `Unsave ${p.name}` : `Save ${p.name} for this visit`
+          }
+          aria-pressed={saved}
+          onClick={() => setSaved(!saved)}
+        >
+          <Heart size={17} fill={saved ? "currentColor" : "none"} />
+        </button>
+        <span className="image-label">{p.feature}</span>
+      </div>
+      <div className="product-info">
+        <div className="card-top">
+          <span>Barcelona, Spain</span>
+          <span className="rating">★ {p.rating}</span>
+        </div>
+        <Link href={detailUrl(p)}>
+          <h3>{p.name}</h3>
+        </Link>
+        <div className="card-bottom">
+          <span>
+            {p.type === "hotels"
+              ? "Boutique stay · 4 stars"
+              : p.type === "activities"
+                ? "A little adventure"
+                : "Your next escape"}
+          </span>
+          <span>
+            from <b>{money(p.price, currency)}</b>
+            <small>
+              {" "}
+              /{" "}
+              {p.type === "hotels"
+                ? "night"
+                : p.type === "cars"
+                  ? "day"
+                  : "person"}
+            </small>
+          </span>
+        </div>
+      </div>
+    </article>
+  );
+}
+export function TravelHome() {
+  const currency = useCurrency();
+  return (
+    <main>
+      <section className="hero">
+        <div className="container">
+          <div className="hero-intro">
+            <div>
+              <div className="eyebrow">
+                <span /> GOOD PLACES. GREAT FEELINGS.
+              </div>
+              <h1>
+                Go somewhere
+                <br />
+                <span>that feels like you.</span>
+                <Sun className="hero-sun" strokeWidth={1.4} />
+              </h1>
+              <p>
+                A city break. A barefoot week. A just-because escape.
+                <br />
+                Your kind of trip starts here.
+              </p>
+            </div>
+            <div className="hero-note">
+              <span>
+                Less scrolling.
+                <br />
+                More strolling.
+              </span>
+              <ArrowUpRight size={45} strokeWidth={1} />
+            </div>
+          </div>
+          <TravelSearch />
+          <div className="hero-photo">
+            <img
+              src="/images/coast.png"
+              alt="Sunlit Positano houses above the turquoise Mediterranean Sea"
+              fetchPriority="high"
+            />
+            <div className="photo-overlay" />
+            <div className="photo-copy">
+              <span className="photo-kicker">A LITTLE INSPIRATION, ON US</span>
+              <h2>
+                Out of office.
+                <br />
+                Into the blue.
+              </h2>
+              <Link href="/destinations/italy/amalfi">
+                Meet the Amalfi Coast <ArrowUpRight size={19} />
+              </Link>
+            </div>
+            <div className="postcard">
+              <Sun size={22} />
+              <span>
+                Salt in your hair.
+                <br />
+                Not a care.
+              </span>
+              <small>AMALFI COAST, ITALY</small>
+            </div>
+            <div className="photo-location">
+              <MapPinIcon /> Positano, Italy <span>40.6281° N, 14.4845° E</span>
+            </div>
+          </div>
+        </div>
+      </section>
+      <div className="trust-strip container">
+        <span>
+          <ShieldCheck />
+          Good trips. No surprises.
+        </span>
+        <span>
+          <Check />
+          Upfront prices, always
+        </span>
+        <span>
+          <Heart />
+          Stays with a little soul
+        </span>
+        <span>
+          <Headphones />A helping hand, anytime
+        </span>
+      </div>
+      <section className="container section">
+        <div className="section-heading">
+          <div>
+            <span className="eyebrow">WHERE WILL YOUR CURIOSITY TAKE YOU?</span>
+            <h2>
+              Some places just <em>call you.</em>
+            </h2>
+          </div>
+          <Link className="text-link" href="/destinations">
+            Explore all destinations <ArrowUpRight size={17} />
+          </Link>
+        </div>
+        <div className="destination-grid">
+          {destinations.map((d, i) => (
+            <Link
+              className="destination-card"
+              href={`/hotels/${d.name.toLowerCase()}?destination=${d.name}`}
+              key={d.name}
+            >
+              <div className="destination-image">
+                <img
+                  src={d.image}
+                  alt={`${d.name}, ${d.country}`}
+                  loading="lazy"
+                />
+                {i === 0 && (
+                  <span className="little-badge">A crowd favorite</span>
+                )}
+                <span className="round-arrow">
+                  <ArrowUpRight size={19} />
+                </span>
+              </div>
+              <div className="destination-heading">
+                <h3>{d.name}</h3>
+                <span>
+                  from <b>{money(d.price, currency)}</b>
+                </span>
+              </div>
+              <p>
+                {d.country} <span>·</span> {d.tag}
+              </p>
+            </Link>
+          ))}
+        </div>
+      </section>
+      <section className="container section">
+        <div className="section-heading">
+          <div>
+            <span className="eyebrow">CHECK IN. SWITCH OFF.</span>
+            <h2>
+              Not just a room. <em>Your kind of place.</em>
+            </h2>
+          </div>
+          <Link className="text-link" href="/hotels">
+            Find your stay <ArrowUpRight size={17} />
+          </Link>
+        </div>
+        <div className="three-grid">
+          {products
+            .filter((p) => p.type === "hotels")
+            .map((p) => (
+              <ProductCard key={p.id} product={p} />
+            ))}
+        </div>
+      </section>
+      <section className="container bundle-banner">
+        <div>
+          <span className="eyebrow">GOOD TOGETHER. BETTER BUNDLED.</span>
+          <h2>
+            Flight + stay.
+            <br />A little less to pay.
+          </h2>
+          <p>
+            Pair your perfect stay with a flight.
+            <br />
+            Keep a little more for the good stuff.
+          </p>
+          <Link className="primary" href="/packages">
+            Find my getaway <ArrowUpRight size={17} />
+          </Link>
+        </div>
+        <div className="bundle-art">
+          <div className="ticket">
+            <span>SAMO AIR / YOUR NEXT ADVENTURE</span>
+            <div>
+              LON <PlaneIcon /> BCN
+            </div>
+            <small>BOARDING: WHENEVER YOU&apos;RE READY</small>
+          </div>
+          <img
+            src={destinations[0].image}
+            alt="Barcelona architecture"
+            loading="lazy"
+          />
+          <div className="sun-sticker">
+            More trip.
+            <br />
+            Less spend.
+          </div>
+        </div>
+      </section>
+      <section className="container section">
+        <div className="section-heading">
+          <div>
+            <span className="eyebrow">THE STORIES YOU TAKE HOME</span>
+            <h2>
+              Make room for <em>the memorable.</em>
+            </h2>
+          </div>
+          <Link className="text-link" href="/activities">
+            Explore experiences <ArrowUpRight size={17} />
+          </Link>
+        </div>
+        <div className="three-grid">
+          {products
+            .filter((p) => p.type === "activities")
+            .map((p) => (
+              <ProductCard key={p.id} product={p} />
+            ))}
+          <Link className="editorial-card" href="/guides/slow-travel">
+            <Palmtree size={44} strokeWidth={1.3} />
+            <span>THE SAMO JOURNAL</span>
+            <h3>
+              The art of
+              <br />
+              doing a little less.
+            </h3>
+            <p>Our guide to slower, happier travel.</p>
+            <ArrowUpRight />
+          </Link>
+        </div>
+      </section>
+      <section className="newsletter">
+        <div className="container newsletter-inner">
+          <div>
+            <span className="eyebrow">A LITTLE WANDERLUST IN YOUR INBOX</span>
+            <h2>Good trips start with a little inspiration.</h2>
+            <p>
+              Explore our destination guides. No noise, just places worth going.
+            </p>
+          </div>
+          <Link href="/destinations" className="primary">
+            Get inspired <ArrowRight size={18} />
+          </Link>
+        </div>
+      </section>
+    </main>
+  );
+}
+function MapPinIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+    >
+      <path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z" />
+      <circle cx="12" cy="10" r="2" />
+    </svg>
+  );
+}
+function PlaneIcon() {
+  return <MoveUpRight size={28} />;
+}
