@@ -88,7 +88,13 @@ export function TravelCalendar({
                 mode="range"
                 min={1}
                 selected={range}
-                onSelect={setRange}
+                onSelect={(nextRange, clickedDay) => {
+                  setRange(
+                    range?.from && range.to
+                      ? { from: clickedDay, to: undefined }
+                      : nextRange,
+                  );
+                }}
                 month={month}
                 onMonthChange={setMonth}
                 numberOfMonths={2}
